@@ -56,4 +56,9 @@ COPY LICENSE "/usr/share/doc/${BIN_NAME}/LICENSE.txt"
 # other official release channels.
 COPY ["dist/linux/${TARGETARCH}/terraform", "/bin/terraform"]
 
+# Create and use a non-root user for security
+RUN addgroup -g 1001 -S terraform && \
+    adduser -u 1001 -S terraform -G terraform
+USER terraform
+
 ENTRYPOINT ["/bin/terraform"]
