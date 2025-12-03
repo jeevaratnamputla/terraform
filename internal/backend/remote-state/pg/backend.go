@@ -139,7 +139,7 @@ func (b *Backend) Configure(configVal cty.Value) tfdiags.Diagnostics {
 
 	if !data.Bool("skip_index_creation") {
 		query = `CREATE UNIQUE INDEX IF NOT EXISTS %s ON %s.%s (name)`
-		if _, err := db.Exec(fmt.Sprintf(query, statesIndexName, b.schemaName, statesTableName)); err != nil {
+		if _, err := db.Exec(fmt.Sprintf(query, pq.QuoteIdentifier(statesIndexName), b.schemaName, pq.QuoteIdentifier(statesTableName))); err != nil {
 			return backendbase.ErrorAsDiagnostics(err)
 		}
 	}
