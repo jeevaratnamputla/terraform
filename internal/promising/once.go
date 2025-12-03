@@ -49,13 +49,14 @@ type Once[T any] struct {
 func (o *Once[T]) Do(ctx context.Context, name string, f func(ctx context.Context) (T, error)) (T, error) {
 	AssertContextInTask(ctx)
 	o.mu.Lock()
+	defer o.mu.Unlock()
+	
 	if o.get == nil {
 		// We seem to be the first call, so we'll get the asynchronous task
 		// running and then block on its result.
 		resolver, get := NewPromise[T](ctx, name)
 		o.get = get
 		o.promiseID = resolver.PromiseID()
-		o.mu.Unlock()
 
 		// The responsibility for resolving the promise transfers to the
 		// asynchronous task, which makes it valid for this main task to
@@ -67,8 +68,6 @@ func (o *Once[T]) Do(ctx context.Context, name string, f func(ctx context.Contex
 				resolver.Resolve(ctx, v, err)
 			},
 		)
-	} else {
-		o.mu.Unlock()
 	}
 
 	// Regardless of whether we launched the async task or not, we'll
