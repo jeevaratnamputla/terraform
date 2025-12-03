@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/hashicorp/go-plugin"
@@ -424,6 +425,12 @@ func providerFactory(meta *providercache.CachedProvider) providers.Factory {
 		execFile, err := meta.ExecutableFile()
 		if err != nil {
 			return nil, err
+		}
+
+		// Validate the executable file path to prevent command injection
+		execFile = filepath.Clean(execFile)
+		if filepath.IsAbs(execFile) == false {
+			return nil, fmt.Errorf("provider executable path must be absolute: %s", execFile)
 		}
 
 		config := &plugin.ClientConfig{
